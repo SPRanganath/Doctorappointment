@@ -5,6 +5,7 @@ import "dotenv/config";
 
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
+import { withScheme } from "./utils/url.js";
 import specialtiesRoutes from "./routes/specialties.routes.js";
 import doctorsRoutes from "./routes/doctors.routes.js";
 import patientsRoutes from "./routes/patients.routes.js";
@@ -14,7 +15,7 @@ import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 
 const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
   .split(",")
-  .map((origin) => origin.trim());
+  .map((origin) => withScheme(origin.trim()));
 
 const app = express();
 

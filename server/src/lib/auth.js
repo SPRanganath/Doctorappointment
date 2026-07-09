@@ -1,16 +1,29 @@
 import { betterAuth, APIError } from "better-auth";
 import { pool } from "../db/pool.js";
+import { withScheme } from "../utils/url.js";
 import "dotenv/config";
+
+const isProduction = process.env.NODE_ENV === "production";
 
 const trustedOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
   .split(",")
-  .map((origin) => origin.trim());
+  .map((origin) => withScheme(origin.trim()));
 
 export const auth = betterAuth({
   database: pool,
-  baseURL: process.env.BETTER_AUTH_URL || `http://localhost:${process.env.PORT || 5000}`,
+  baseURL: process.env.BETTER_AUTH_URL
+    ? withScheme(process.env.BETTER_AUTH_URL)
+    : `http://localhost:${process.env.PORT || 5000}`,
   secret: process.env.BETTER_AUTH_SECRET,
   trustedOrigins,
+
+  // In production the frontend and backend live on different Render
+  // subdomains (different sites, not just different ports like in local
+  // dev), so the session cookie needs SameSite=None + Secure to be sent
+  // cross-origin at all.
+  advanced: isProduction
+    ? { defaultCookieAttributes: { sameSite: "none", secure: true } }
+    : undefined,
 
   emailAndPassword: {
     enabled: true,

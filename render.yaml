@@ -1,0 +1,53 @@
+\
+# Render Blueprint — documents the deployment topology.
+#
+# This project is actively deployed via the Render API (two services already
+# provisioned: doctorappointment-api, doctorappointment-web). This file is
+# kept in the repo so the deployment is reproducible from a clean Render
+# account via Dashboard → New → Blueprint, and so the shape of the required
+# env vars is documented alongside the code.
+
+services:
+  - type: web
+    name: doctorappointment-api
+    runtime: node
+    repo: https://github.com/SPRanganath/Doctorappointment
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # set manually — Neon connection string
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        fromService:
+          type: web
+          name: doctorappointment-api
+          property: host
+      - key: CORS_ORIGIN
+        fromService:
+          type: web
+          name: doctorappointment-web
+          property: host
+
+  - type: web
+    name: doctorappointment-web
+    runtime: static
+    repo: https://github.com/SPRanganath/Doctorappointment
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_SERVER_URL
+        fromService:
+          type: web
+          name: doctorappointment-api
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

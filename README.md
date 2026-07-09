@@ -67,3 +67,14 @@ Seeded by `npm run db:seed`:
 **Frontend** (repo root): `npm run dev`, `npm run build`, `npm run preview`, `npm run lint`
 
 **Backend** (`server/`): `npm run dev`, `npm start`, `npm run db:migrate`, `npm run db:seed`, `npm run db:setup`
+
+## Deployment (Render)
+
+Deployed as two Render services from this single repo — see `render.yaml`:
+
+- **`doctorappointment-api`** — Web Service, root dir `server`, build `npm install`, start `npm start`, health check `/api/health`
+- **`doctorappointment-web`** — Static Site, root dir `.`, build `npm install && npm run build`, publish dir `dist`, SPA rewrite via `public/_redirects`
+
+Env vars: the API needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NODE_ENV=production`, and `CORS_ORIGIN` (the static site's URL); the static site needs `VITE_SERVER_URL` (the API's URL) set at build time. In production the two services live on different `onrender.com` subdomains, so Better Auth's session cookie is configured with `SameSite=None; Secure` (see `server/src/lib/auth.js`) to survive the cross-origin request.
+
+To redeploy from scratch on a new Render account: Dashboard → New → Blueprint → point at this repo → Render reads `render.yaml` and provisions both services (fill in `DATABASE_URL` manually when prompted).

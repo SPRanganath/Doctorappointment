@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { withScheme } from "./url";
+
+const SERVER_URL = withScheme(import.meta.env.VITE_SERVER_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_BASE_URL = `${SERVER_URL}/api`;
 
 export class ApiError extends Error {
   status: number;
